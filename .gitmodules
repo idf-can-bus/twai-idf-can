@@ -1,3 +1,3 @@
 [submodule "components/examples-utils-idf-can"]
 	path = components/examples-utils-idf-can
-	url = git@github.com:idf-can-bus/examples-utils-idf-can.git
+	url = https://github.com/idf-can-bus/examples-utils-idf-can.git
