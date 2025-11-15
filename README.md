@@ -32,7 +32,7 @@ GND      ----> GND
 ```
 
 **Important Notes:**
-- A **120-ohm termination resistor** must be placed at **one end only** of the CAN bus !!!
+- **CAN bus termination:** The general recommendation is to place one 120-ohm termination resistor at each end of a long CAN bus. However, the author's experience with short experimental setups shows that using only one 120-ohm resistor for the entire bus often works better.
 - Typical GPIO pins: TX=GPIO_5, RX=GPIO_4 (configurable)
 - Maximum cable length depends on bitrate (1 Mbps ≤ 40m, 125 kbps ≤ 500m)
 
@@ -247,7 +247,7 @@ esp_log_level_set("can_backend_twai", ESP_LOG_DEBUG);
 ### No Messages Received
 
 1. Check physical wiring (especially CANH/CANL polarity)
-2. Verify termination resistors (120Ω at each end)
+2. Verify termination resistors (see wiring notes above)
 3. Ensure matching bitrate on all nodes
 4. Check acceptance filter configuration
 5. Try `TWAI_MODE_NO_ACK` for testing without other nodes
@@ -355,8 +355,21 @@ For more examples with advanced features, see:
 
 ## Related Projects
 
-- [mcp25xxx-multi-idf-can](https://github.com/idf-can-bus/mcp25xxx-multi-idf-can) - External MCP25xxx CAN controllers (single or multiple)
-- [can-multibackend-idf](https://github.com/idf-can-bus/can-multibackend-idf) - Unified interface for multiple CAN backends
+- **[can-multibackend-idf](https://github.com/idf-can-bus/can-multibackend-idf)** - Unified interface supporting multiple CAN backends (TWAI, MCP2515 single/multi)
+  - Allows switching between different CAN controllers via Kconfig without code changes
+  - Includes this library as a submodule for TWAI backend
+  - Provides `can_dispatch` abstraction layer for backend-agnostic examples
+
+- **[mcp25xxx-multi-idf-can](https://github.com/idf-can-bus/mcp25xxx-multi-idf-can)** - External MCP25xxx CAN controllers (single or multiple)
+  - Supports multiple MCP25xxx devices simultaneously via SPI
+  - Alternative backend for external CAN controllers
+  - Compatible with MCP2515, MCP25625 and other MCP25xxx family chips
+
+- **[examples-utils-idf-can](https://github.com/idf-can-bus/examples-utils-idf-can)** - Common utility functions shared across all CAN examples
+  - Message formatting and display helpers
+  - Used as a submodule in both this project and mcp25xxx-multi-idf-can
+
+All projects are part of the **[idf-can-bus](https://github.com/idf-can-bus)** organization on GitHub.
 
 ## License
 
