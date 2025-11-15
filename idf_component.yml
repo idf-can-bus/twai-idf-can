@@ -1,0 +1,7 @@
+version: "1.0.0"
+description: "Simplified high-level adapter for ESP32 TWAI (CAN) controller with automatic error recovery"
+url: "https://github.com/esp32-can/esp32-can-twai"
+dependencies:
+  idf:
+    version: ">=5.0.0"
+
