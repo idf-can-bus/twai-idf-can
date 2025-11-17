@@ -22,19 +22,21 @@
 #include "can_twai.h"
 #include "config_twai.h"
 
-static const char *TAG = "send_twai";
-
 void app_main(void)
 {
+    // Build dynamic log tag: "send-" + backend name
+    char tag[32];
+    snprintf(tag, sizeof(tag), "send-%s", can_backend_get_name());
+
     // Identify example and backend
     uint8_t sender_id = default_sender_id_from_mac();
-    ESP_LOGI(TAG, "=== example: send-single, backend: %s, SEND_ID:%u ===",
-        can_backend_get_name(), (unsigned)sender_id);
+    ESP_LOGI(tag, "=== example: send-single, backend: %s, SEND_ID:%u ===",
+             can_backend_get_name(), (unsigned)sender_id);
 
     // Initialize hardware
-    ESP_LOGI(TAG, "Initializing CAN backend: %s ...", can_backend_get_name());
+    ESP_LOGI(tag, "Initializing CAN backend: %s ...", can_backend_get_name());
     if (!can_twai_init(&TWAI_HW_CFG)) {
-        ESP_LOGE(TAG, "Failed to initialize %s backend", can_backend_get_name());
+        ESP_LOGE(tag, "Failed to initialize %s backend", can_backend_get_name());
         return;
     }
     
@@ -48,7 +50,6 @@ void app_main(void)
     bool print_during_send = false;
     uint64_t index = 0;
     const uint64_t max_index = 2000;
-    
 
     while (1)
     {
@@ -63,7 +64,7 @@ void app_main(void)
         success = can_twai_send(&message);
         if (!success)
         {
-            ESP_LOGE(TAG, "Failed to send message");
+            ESP_LOGE(tag, "Failed to send message");
             print_can_message(&message);
         }
         else {

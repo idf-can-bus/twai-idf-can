@@ -22,18 +22,20 @@
 #include "can_twai.h"
 #include "config_twai.h"
 
-static const char *TAG = "receive_poll_twai";
-
 void app_main(void)
 {
+    // Build dynamic log tag: "recv_poll-" + backend name
+    char tag[32];
+    snprintf(tag, sizeof(tag), "recv_poll-%s", can_backend_get_name());
+
     // Identify example and backend
-    ESP_LOGI(TAG, "=== example: receive_poll-single, backend: %s ===",
-        can_backend_get_name());
+    ESP_LOGI(tag, "=== example: receive_poll-single, backend: %s ===",
+             can_backend_get_name());
 
     // Initialize hardware
-    ESP_LOGI(TAG, "Initializing CAN backend: %s ...", can_backend_get_name());
+    ESP_LOGI(tag, "Initializing CAN backend: %s ...", can_backend_get_name());
     if (!can_twai_init(&TWAI_HW_CFG)) {
-        ESP_LOGE(TAG, "Failed to initialize %s backend", can_backend_get_name());
+        ESP_LOGE(tag, "Failed to initialize %s backend", can_backend_get_name());
         return;
     }
 
