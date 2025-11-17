@@ -26,10 +26,14 @@ static const char *TAG = "receive_poll_twai";
 
 void app_main(void)
 {
+    // Identify example and backend
+    ESP_LOGI(TAG, "=== example: receive_poll-single, backend: %s ===",
+        can_backend_get_name());
+
     // Initialize hardware
-    ESP_LOGI(TAG, "Initializing TWAI controller...");
+    ESP_LOGI(TAG, "Initializing CAN backend: %s ...", can_backend_get_name());
     if (!can_twai_init(&TWAI_HW_CFG)) {
-        ESP_LOGE(TAG, "Failed to initialize TWAI controller");
+        ESP_LOGE(TAG, "Failed to initialize %s backend", can_backend_get_name());
         return;
     }
 
@@ -40,9 +44,6 @@ void app_main(void)
     // Example settings
     bool print_during_send = false;
     const uint32_t receive_interval_ms = 1;
-
-    // Identify yourself as receiver   
-    ESP_LOGI(TAG, "Receiver poll driven");
 
     while (1)
     {

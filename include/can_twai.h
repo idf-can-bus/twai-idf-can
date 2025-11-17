@@ -150,6 +150,13 @@ bool can_twai_receive(twai_message_t *msg);
  */
 void can_twai_reset_if_needed(void);
 
+/**
+ * @brief Get human-readable backend name for TWAI adapter
+ *
+ * @return const char* Static C string with backend name
+ */
+const char *can_backend_get_name(void);
+
 #ifdef __cplusplus
 }
 #endif

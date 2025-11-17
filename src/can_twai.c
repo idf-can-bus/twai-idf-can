@@ -160,3 +160,13 @@ bool can_twai_receive(twai_message_t *msg)
     return false;
 }
 
+// --------------------------------------------------------------------------------------
+// Backend identification
+// --------------------------------------------------------------------------------------
+const char *can_backend_get_name(void)
+{
+    return "TWAI";
+}
+
+
+

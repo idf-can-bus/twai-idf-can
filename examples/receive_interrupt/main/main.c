@@ -75,10 +75,15 @@ static void can_rx_consumer_task(void *arg)
 
 void app_main(void)
 {
+
+    // Identify example and backend
+    ESP_LOGI(TAG, "=== example: receive_interrupt-single, backend: %s ===",
+        can_backend_get_name());
+
     // Initialize hardware
-    ESP_LOGI(TAG, "Initializing TWAI controller...");
+    ESP_LOGI(TAG, "Initializing CAN backend: %s ...", can_backend_get_name());
     if (!can_twai_init(&TWAI_HW_CFG)) {
-        ESP_LOGE(TAG, "Failed to initialize TWAI controller");
+        ESP_LOGE(TAG, "Failed to initialize %s backend", can_backend_get_name());
         return;
     }
 
@@ -88,9 +93,6 @@ void app_main(void)
         ESP_LOGE(TAG, "Failed to create RX queue");
         return;
     }
-
-    // Identify yourself as receiver
-    ESP_LOGI(TAG, "Receiver interrupt-driven");
 
     // Start tasks
     BaseType_t ok1 = xTaskCreate(can_rx_producer_task, "can_rx_prod", PRODUCER_TASK_STACK, NULL, PRODUCER_TASK_PRIO, NULL);

@@ -26,10 +26,15 @@ static const char *TAG = "send_twai";
 
 void app_main(void)
 {
+    // Identify example and backend
+    uint8_t sender_id = default_sender_id_from_mac();
+    ESP_LOGI(TAG, "=== example: send-single, backend: %s, SEND_ID:%u ===",
+        can_backend_get_name(), (unsigned)sender_id);
+
     // Initialize hardware
-    ESP_LOGI(TAG, "Initializing TWAI controller...");
+    ESP_LOGI(TAG, "Initializing CAN backend: %s ...", can_backend_get_name());
     if (!can_twai_init(&TWAI_HW_CFG)) {
-        ESP_LOGE(TAG, "Failed to initialize TWAI controller");
+        ESP_LOGE(TAG, "Failed to initialize %s backend", can_backend_get_name());
         return;
     }
     
@@ -43,10 +48,7 @@ void app_main(void)
     bool print_during_send = false;
     uint64_t index = 0;
     const uint64_t max_index = 2000;
-    uint8_t sender_id = default_sender_id_from_mac();
-
-    // Identify yourself as sender
-    ESP_LOGI(TAG, "Sender ID: %d", sender_id);
+    
 
     while (1)
     {

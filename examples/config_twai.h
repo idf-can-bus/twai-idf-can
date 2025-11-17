@@ -8,7 +8,6 @@
  * Hardware requirements:
  * - ESP32 with built-in TWAI controller
  * - CAN transceiver (e.g., SN65HVD230, TJA1050, MCP2551)
- * - 120-ohm termination resistors at each end of the CAN bus
  * 
  * @author Ivo Marvan
  * @date 2025
