@@ -29,7 +29,6 @@
 #include "can_twai.h"
 #include "config_twai.h"
 
-static const char *TAG = "receive_interrupt_twai";
 
 // Queue capacity tuned for bursty traffic
 #define RX_QUEUE_LENGTH 64
@@ -76,21 +75,25 @@ static void can_rx_consumer_task(void *arg)
 void app_main(void)
 {
 
+    // Build dynamic log tag: "recv_poll-" + backend name
+    char tag[32];
+    snprintf(tag, sizeof(tag), "recv_poll-%s", can_backend_get_name());
+
     // Identify example and backend
-    ESP_LOGI(TAG, "=== example: receive_interrupt-single, backend: %s ===",
+    ESP_LOGI(tag, "=== example: receive_interrupt-single, backend: %s ===",
         can_backend_get_name());
 
     // Initialize hardware
-    ESP_LOGI(TAG, "Initializing CAN backend: %s ...", can_backend_get_name());
+    ESP_LOGI(tag, "Initializing CAN backend: %s ...", can_backend_get_name());
     if (!can_twai_init(&TWAI_HW_CFG)) {
-        ESP_LOGE(TAG, "Failed to initialize %s backend", can_backend_get_name());
+        ESP_LOGE(tag, "Failed to initialize %s backend", can_backend_get_name());
         return;
     }
 
     // Create RX queue
     rx_queue = xQueueCreate(RX_QUEUE_LENGTH, sizeof(twai_message_t));
     if (rx_queue == NULL) {
-        ESP_LOGE(TAG, "Failed to create RX queue");
+        ESP_LOGE(tag, "Failed to create RX queue");
         return;
     }
 
@@ -98,7 +101,7 @@ void app_main(void)
     BaseType_t ok1 = xTaskCreate(can_rx_producer_task, "can_rx_prod", PRODUCER_TASK_STACK, NULL, PRODUCER_TASK_PRIO, NULL);
     BaseType_t ok2 = xTaskCreate(can_rx_consumer_task, "can_rx_cons", CONSUMER_TASK_STACK, NULL, CONSUMER_TASK_PRIO, NULL);
     if (ok1 != pdPASS || ok2 != pdPASS) {
-        ESP_LOGE(TAG, "Failed to create tasks (prod=%ld, cons=%ld)", (long)ok1, (long)ok2);
+        ESP_LOGE(tag, "Failed to create tasks (prod=%ld, cons=%ld)", (long)ok1, (long)ok2);
         return;
     }
 }
