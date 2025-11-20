@@ -17,7 +17,7 @@ This library provides a user-friendly interface for ESP32's built-in TWAI (Two-W
 
 ### ESP32 Built-in TWAI Controller
 
-The ESP32 TWAI controller requires a CAN transceiver to interface with the physical CAN bus. The library was tested with **SN65HVD230** 
+The ESP32 TWAI controller requires a CAN transceiver to interface with the physical CAN bus. The library was tested with **SN65HVD230**.
 
 ### Typical Wiring (SN65HVD230 Example)
 
@@ -33,6 +33,7 @@ GND      ----> GND
 
 **Important Notes:**
 - **CAN bus termination:** The general recommendation is to place one 120-ohm termination resistor at each end of a long CAN bus. However, the author's experience with short experimental setups shows that using only one 120-ohm resistor for the entire bus often works better.
+- **SN65HVD230 Modules:** Some SN65HVD230 (or similar) hub modules already include an integrated 120-ohm termination resistor. Depending on your network topology, you may need to add or remove these resistors to ensure the bus has the correct number of terminations.
 - Typical GPIO pins: TX=GPIO_5, RX=GPIO_4 (configurable)
 - Maximum cable length depends on bitrate (1 Mbps ≤ 40m, 125 kbps ≤ 500m)
 
@@ -54,7 +55,28 @@ Clone into your project's `components` directory:
 
 ```bash
 cd your_project/components
-git clone https://github.com/esp32-can/esp32-can-twai.git
+git clone --recurse-submodules https://github.com/esp32-can/esp32-can-twai.git
+```
+(Use --recurse-submodules because this project includes the submodule [examples-utils-idf-can](https://github.com/idf-can-bus/examples-utils-idf-can.git).
+You can also initialize submodules later with `git submodule update --init --recursive`.)
+
+## Project Layout
+
+The component is organized into a small set of well-defined directories:
+
+```text
+twai-idf-can/
+├─ src/                     # Implementation of the TWAI adapter
+│   └─ can_twai.c
+├─ include/                 # Public headers (API and configuration types)
+│   ├─ can_twai.h
+│   └─ can_twai_config.h
+├─ examples/                # Example applications using this component
+│   ├─ send/
+│   ├─ receive_poll/
+│   └─ receive_interrupt/
+└─ components/
+    └─ examples-utils-idf-can/  # Submodule with shared utilities for examples
 ```
 
 ## Quick Start
@@ -103,6 +125,7 @@ twai_backend_config_t config = {
     }
 };
 ```
+The actual configuration for examples is in [config_twai.h](examples/config_twai.h).
 
 ### 3. Initialize
 
@@ -145,9 +168,16 @@ if (can_twai_receive(&rx_msg)) {
 
 ### 6. Cleanup (Optional)
 
-```c
+```
 can_twai_deinit();
 ```
+
+---
+See examples for more detailed basic usage examples:
+- [examples/send/](./examples/send/main/main.c)
+- [examples/receive_poll/](./examples/receive_poll/main/main.c)
+- [examples/receive_interrupt/](./examples/receive_interrupt/main/main.c)
+---
 
 ## Advanced Usage
 
@@ -215,6 +245,11 @@ can_twai_reset_if_needed();  // Checks state and recovers if needed
 
 See `can_twai.h` for full Doxygen documentation.
 
+## Doxygen Documentation
+
+All public headers (`include/can_twai.h`, `include/can_twai_config.h` and `components/examples-utils-idf-can/include/examples_utils.h`) are fully documented with Doxygen comments.
+To integrate this component into your own documentation, add these include directories to your Doxygen `INPUT` paths.
+
 ## Configuration Types
 
 ### `twai_backend_config_t`
@@ -265,6 +300,9 @@ esp_log_level_set("can_backend_twai", ESP_LOG_DEBUG);
 2. Check that `driver` component is available
 3. Verify component is in `components/` directory
 
+Check ESP-IDF documentation for TWAI driver details.
+
+
 ## Examples
 
 The library includes three ready-to-use examples in the `examples/` directory:
@@ -281,7 +319,23 @@ The library includes three ready-to-use examples in the `examples/` directory:
 make
 ```
 
-For detailed build instructions and options, see [BUILDING_EXAMPLES.md](BUILDING_EXAMPLES.md).
+You can also build individual examples using the Makefile targets:
+
+```bash
+make send
+make receive_poll
+make receive_interrupt
+```
+
+For CI/CD pipelines, you can run:
+
+```bash
+./build_all_examples.sh build
+```
+
+This script returns exit code `0` when all examples build successfully and `1` if any example fails.
+
+This setup should be sufficient for most example builds and CI use cases.
 
 ### Prerequisites for Building Examples
 
@@ -297,6 +351,41 @@ Before building examples, set up your environment:
 # 3. Build all examples
 ./build_all_examples.sh
 ```
+
+Available targets for `set_target_all.sh` are the same as for the `idf.py set-target` command (for example: esp32, esp32s2, esp32s3, esp32c3, esp32c6, esp32h2, ...).
+
+
+### Using idf.py Directly
+
+You can work with individual examples using `idf.py` commands:
+
+```bash
+idf.py build                    # Build the current example
+idf.py -p /dev/ttyUSB0 flash    # Flash the firmware
+idf.py -p /dev/ttyUSB0 monitor  # Open serial monitor
+```
+
+To combine flashing and monitoring in one step:
+
+```bash
+idf.py -p /dev/ttyUSB0 flash monitor
+```
+
+You can stop the ESP-IDF monitor with `Ctrl+]` or with `Ctrl+T` followed by `X`.
+
+---
+**For tests you can use the send example on one ESP32 board and one of the receive examples on another board connected to the same CAN bus.**
+
+Use the `examples/send` project on Board 1 (sender) and one of the `examples/receive_*` projects on Board 2 (receiver). Connect both boards via CAN transceivers as shown below; for short test setups, a single 120Ω termination resistor at one end of the bus is usually sufficient.
+
+```
+Board1-TX → Transceiver1-TX → CAN_H ←→ CAN_H ← Transceiver2-TX ← Board2-TX
+Board1-RX ← Transceiver1-RX ← CAN_L ←→ CAN_L → Transceiver2-RX → Board2-RX
+                               ↑
+                          120Ω resistor
+```
+
+---
 
 ### 1. Send Example (`examples/send/`)
 
@@ -330,7 +419,7 @@ idf.py build
 idf.py -p /dev/ttyUSB0 flash monitor
 ```
 
-### Hardware Configuration
+### Hardware Configuration for Examples
 
 All examples use the same hardware configuration defined in `examples/config_twai.h`.
 Modify this file to match your GPIO connections and CAN bitrate.
@@ -355,21 +444,7 @@ For more examples with advanced features, see:
 
 ## Related Projects
 
-- **[can-multibackend-idf](https://github.com/idf-can-bus/can-multibackend-idf)** - Unified interface supporting multiple CAN backends (TWAI, MCP2515 single/multi)
-  - Allows switching between different CAN controllers via Kconfig without code changes
-  - Includes this library as a submodule for TWAI backend
-  - Provides `can_dispatch` abstraction layer for backend-agnostic examples
-
-- **[mcp25xxx-multi-idf-can](https://github.com/idf-can-bus/mcp25xxx-multi-idf-can)** - External MCP25xxx CAN controllers (single or multiple)
-  - Supports multiple MCP25xxx devices simultaneously via SPI
-  - Alternative backend for external CAN controllers
-  - Compatible with MCP2515, MCP25625 and other MCP25xxx family chips
-
-- **[examples-utils-idf-can](https://github.com/idf-can-bus/examples-utils-idf-can)** - Common utility functions shared across all CAN examples
-  - Message formatting and display helpers
-  - Used as a submodule in both this project and mcp25xxx-multi-idf-can
-
-All projects are part of the **[idf-can-bus](https://github.com/idf-can-bus)** organization on GitHub.
+My other related CAN bus libraries for ESP-IDF are maintained in the **[idf-can-bus](https://github.com/idf-can-bus)** organization on GitHub.
 
 ## License
 
@@ -378,14 +453,4 @@ MIT License - see [LICENSE](LICENSE) file for details.
 ## Author
 
 Ivo Marvan, 2025
-
-## Contributing
-
-Contributions are welcome! Please open an issue or pull request on GitHub.
-
-## Support
-
-For issues, questions, or suggestions:
-- Open an issue on [GitHub](https://github.com/esp32-can/esp32-can-twai/issues)
-- Check ESP-IDF documentation for TWAI driver details
 
